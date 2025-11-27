@@ -1,25 +1,69 @@
-/* general styling for the toDo List */
+/* general styling for the toDo List, heavily replying on ChatGPT for styling */
+/* "#" is used to select a id and "." is used to select a class. */
+/* page layout */
 .container {
     max-width: 400px;
     margin: auto;
 }
 
-/* delete button styling */
-.delete-Button {
-    color: red;
-    cursor: pointer;
+/* background */
+body {
+    background-color: rgb(155, 134, 131);
 }
 
-/*aligning the delete button */
-#taskList li {                                                  /* "#" is used to select a id and "." is used to select a class. */
+/* the list */
+#taskList {
+    padding: 0;
+}
+
+/* each task item */
+#taskList li {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    width: 100%;
+
+    background-color: white;
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin-bottom: 12px;
+
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    transition: transform 0.2s ease, opacity 0.3s ease;
 }
 
-/* debugging */
-body {
-background-color: rgb(155, 134, 131);
+/* delete button */
+.delete-Button {
+    background-color: #ffcccc;
+    border: none;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    font-size: 14px;
+    cursor: pointer;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+/* hover effect */
+.delete-Button:hover {
+    background-color: #ff9999;
+    transform: scale(1.1);
+}
+
+/* animation when task is added */
+.task-enter {
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: opacity 0.4s, transform 0.4s ease;
+}
+
+/* animation when task is removed */
+.task-exit {
+    opacity: 0;
+    transform: translateX(30px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
 }
 

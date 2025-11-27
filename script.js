@@ -11,6 +11,7 @@ tasks.forEach(function(task) {
 //function to build the DOM (the HTML code) and inserting the data from local storage into it
 function addTaskToDOM(task) {
     let li = document.createElement("li");                                                          //this is building the HTML code:
+    li.classList.add("task-enter");                                                                 // <li class="task-item"></li> (to allow for css to apply style)
                                                                                                     // <li></li>
     let taskSpan = document.createElement("span");                                                  // <span></span>
     taskSpan.textContent = task;                                                                    // <span>task</span>
@@ -19,9 +20,11 @@ function addTaskToDOM(task) {
     deleteButton.textContent = "X";                                                                 // <button>X</button>
     deleteButton.classList.add("delete-Button");                                                    // <button class="delete-Button">X</button> (to allow for css to apply style)
 
-    //copied from the click function below. It removes the li from the DOM and removes the li from local storage
+    //It removes the li from the DOM and removes the li from local storage
     deleteButton.addEventListener("click", function () {                                            
-        li.remove();                                                                                //remove task from DOM
+        li.classList.add("task-exit");
+        setTimeout(() => li.remove(), 200);                                                         //removes the li from the DOM after 200 milliseconds to allow for the css animation to complete
+                                                                                        
         tasks = tasks.filter(t => t !== task);                                                      //remove the task from the array
         localStorage.setItem("tasks", JSON.stringify(tasks));                                       //update local storage with new array
         
@@ -33,6 +36,8 @@ function addTaskToDOM(task) {
     
     //now that the LI is built we need to add it to the unordered list which can be identifyed using the id we assigned it in the HTML document
     document.getElementById("taskList").appendChild(li);
+    setTimeout(() => li.classList.add("task-enter-active"), 10);
+
 
 }
 
