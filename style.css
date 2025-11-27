@@ -1,0 +1,25 @@
+/* general styling for the toDo List */
+.container {
+    max-width: 400px;
+    margin: auto;
+}
+
+/* delete button styling */
+.delete-Button {
+    color: red;
+    cursor: pointer;
+}
+
+/*aligning the delete button */
+#taskList li {                                                  /* "#" is used to select a id and "." is used to select a class. */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+/* debugging */
+body {
+background-color: rgb(155, 134, 131);
+}
+
