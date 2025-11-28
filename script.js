@@ -36,7 +36,6 @@ function addTaskToDOM(task) {
     
     //now that the LI is built we need to add it to the unordered list which can be identifyed using the id we assigned it in the HTML document
     document.getElementById("taskList").appendChild(li);
-    setTimeout(() => li.classList.add("task-enter-active"), 10);
 
 
 }

@@ -2,68 +2,150 @@
 /* "#" is used to select a id and "." is used to select a class. */
 /* page layout */
 .container {
-    max-width: 400px;
-    margin: auto;
+    max-width: 400px;  /* limits width to 400 pixels */
+    margin: auto;  /* centers the container horizontally */
+    padding: 20px;  /* adds 20px space inside container on all sides */
+    background-color: #e3f6ea;  /* slightly darker soft green tint for the card */
+    border: 1px solid #bfe6cc;  /* slightly stronger green border for contrast */
+    border-radius: 16px;  /* rounded corners for the card */
+    box-shadow: 0 10px 24px rgba(16, 86, 53, 0.09);  /* stronger, green-tinted shadow */
+    margin-top: 20px;  /* adds space from top */
+}
+
+/* title */
+h1 {
+    text-align: center;  /* centers the text */
+    color: #333;  /* dark color so title is visible on the white card */
+    margin-bottom: 20px;  /* adds 20px space below the title */
+}
+
+/* input field */
+#taskInput {
+    width: 100%;  /* takes up full width of container */
+    padding: 12px;  /* adds 12px space inside the input box */
+    font-size: 16px;  /* makes text bigger */
+    border: 2px solid #cfe9d8;  /* soft green border to match theme */
+    border-radius: 8px;  /* rounds the corners */
+    box-sizing: border-box;  /* keeps total width at 100% even with padding */
+    margin-bottom: 10px;  /* adds 10px space below input */
+    transition: border-color 0.3s ease;  /* smoothly changes border color over 0.3 seconds */
+}
+
+/* input focus effect - when user clicks in the input box */
+#taskInput:focus {
+    outline: none;  /* removes the default blue outline */
+    border-color: #2e8b57;  /* green accent on focus */
+    box-shadow: 0 4px 12px rgba(46, 139, 87, 0.08);  /* subtle green glow */
+}
+
+/* add button */
+#addButton {
+    width: 100%;  /* full width to match input */
+    padding: 12px;  /* adds 12px space inside button */
+    background-color: #2e8b57;  /* green main button color */
+    color: white;  /* makes text white */
+    border: none;  /* removes default border */
+    border-radius: 8px;  /* rounds the corners */
+    font-size: 16px;  /* makes text bigger */
+    cursor: pointer;  /* changes cursor to hand when hovering */
+    margin-bottom: 20px;  /* adds 20px space below button */
+    transition: background-color 0.3s ease, transform 0.2s ease;  /* smooth color and movement changes */
+}
+
+/* add button hover effect - when mouse is over the button */
+#addButton:hover {
+    background-color: #277a4a;  /* darker green on hover */
+    transform: translateY(-2px);  /* button moves up 2 pixels */
 }
 
 /* background */
 body {
-    background-color: rgb(155, 134, 131);
+    /* darker soft green gradient so the white card contrasts more */
+    background: linear-gradient(180deg, #c7ead6 0%, #a8dfbf 100%); /* darker green gradient */
+    min-height: 100vh;  /* takes up full screen height */
+    padding: 20px;  /* adds space around edges */
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; /* readable default font */
+    color: #13361a; /* default text color (dark green) */
 }
 
 /* the list */
 #taskList {
-    padding: 0;
+    padding: 0;  /* removes default padding from list */
 }
 
-/* each task item */
+/* each task item - the <li> container holding both text and delete button */
 #taskList li {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    display: flex;  /* arranges children (text and button) in a row */
+    justify-content: space-between;  /* spreads items apart */
+    align-items: center;  /* aligns items vertically in the middle */
+    gap: 12px;  /* adds 12px space between task text and delete button */
 
-    background-color: white;
-    border-radius: 12px;
-    padding: 12px 16px;
-    margin-bottom: 12px;
+    margin-bottom: 12px;  /* adds 12px space below each task */
+}
 
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-    transition: transform 0.2s ease, opacity 0.3s ease;
+/* task text container - the white box containing the task text */
+#taskList span {
+    background-color: white;  /* white background */
+    border-radius: 12px;  /* rounded corners */
+    padding: 12px 16px;  /* 12px top/bottom, 16px left/right padding */
+    flex: 1;  /* takes up all available space (grows to fill) */
+    box-shadow: 0 4px 8px rgba(16, 86, 53, 0.06);  /* subtle green-tinted shadow for depth */
+    transition: transform 0.2s ease, opacity 0.3s ease;  /* smooth animation when removed */
 }
 
 /* delete button */
 .delete-Button {
-    background-color: #ffcccc;
-    border: none;
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    font-size: 14px;
-    cursor: pointer;
+    background-color: #ffcccc;  /* light red/pink background */
+    border: none;  /* removes default border */
+    width: 36px;  /* makes button 36px wide */
+    height: 36px;  /* makes button 36px tall */
+    border-radius: 50%;  /* 50% makes it a perfect circle */
+    font-size: 14px;  /* size of the X text */
+    cursor: pointer;  /* changes cursor to hand */
+    flex-shrink: 0;  /* prevents button from shrinking */
 
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    transition: background-color 0.3s ease, transform 0.2s ease;
+    display: flex;  /* allows centering of X */
+    justify-content: center;  /* centers X horizontally */
+    align-items: center;  /* centers X vertically */
+    transition: background-color 0.3s ease, transform 0.2s ease;  /* smooth color and size changes */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);  /* adds shadow for depth */
 }
 
-/* hover effect */
+/* delete button hover effect - when mouse is over the button */
 .delete-Button:hover {
-    background-color: #ff9999;
-    transform: scale(1.1);
+    background-color: #ff9999;  /* button becomes darker red/pink */
+    transform: scale(1.1);  /* button grows 10% larger */
 }
 
-/* animation when task is added */
+/* animation when task is added - slides in from top while fading in */
 .task-enter {
-    opacity: 0;
-    transform: translateY(-10px);
-    transition: opacity 0.4s, transform 0.4s ease;
+    animation: slideIn 0.4s ease forwards;  /* plays slideIn animation for 0.4 seconds */
 }
 
-/* animation when task is removed */
+@keyframes slideIn {
+    from {
+        opacity: 0;  /* starts invisible */
+        transform: translateY(-10px);  /* starts 10px above normal position */
+    }
+    to {
+        opacity: 1;  /* ends fully visible */
+        transform: translateY(0);  /* ends at normal position */
+    }
+}
+
+/* animation when task is removed - slides out to right while fading out */
 .task-exit {
-    opacity: 0;
-    transform: translateX(30px);
-    transition: opacity 0.3s ease, transform 0.3s ease;
+    animation: slideOut 0.3s ease forwards;  /* plays slideOut animation for 0.3 seconds */
+}
+
+@keyframes slideOut {
+    from {
+        opacity: 1;  /* starts fully visible */
+        transform: translateX(0);  /* starts at normal position */
+    }
+    to {
+        opacity: 0;  /* ends invisible */
+        transform: translateX(30px);  /* ends 30px to the right */
+    }
 }
 
