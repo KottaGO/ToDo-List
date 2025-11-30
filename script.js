@@ -20,8 +20,11 @@ let tasks = Array.isArray(raw) ? raw.map(item => {
 
 //Create a task
 function createTask(userInput) {
-    let createTask = Array.isArray(id: Date.now() + Math.floor(Math.random() * 1000), text: task, done: false);
-    return createTask;
+    return {
+        id: Date.now() + Math.floor(Math.random() * 1000),
+        text: userInput,
+        done: false
+    };
 }
 
 //using local storage to load data
