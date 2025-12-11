@@ -14,7 +14,8 @@ let tasks = Array.isArray(raw) ? raw.map(item => {
             text: item,
             done: false,
             important: false, //is this right?
-            urgent: false
+            urgent: false,
+            quadrant: 4
          };
     } else {
         return {
@@ -23,49 +24,22 @@ let tasks = Array.isArray(raw) ? raw.map(item => {
             done: item.done,
             important: item.important,
             urgent: item.urgent,
-            value: parseInt(important) + parseInt(urgent)
+            quadrant: computeQuad(item.important, item.urgent)
 
         };
     }
 }) : [];
 
-//the sort function will sort the array by comparing two values. If b.priority is bigger than a.priority then it will return a positive number which will tell the sort function that the "b" value should come first and the "a" value should come after.
-function sortTasks() {
-    tasks.sort((a,b) => {
-        if (a.value === 7) {
-            return 1;
-        }
-    });
+//Clear old data and load from local storage
+rebuildDOM();
 
-    tasks.sort((a,b) => {
-        if (a.value === 3) {
-            return 1;
-        }
-    });
-
-    tasks.sort((a,b) => {
-        if (a.value === 9) {
-            return 1;
-        }
-    });
-
-    tasks.sort((a,b) => {
-        if (a.value === 5) {
-            return 1;
-        }
-    });
-}
-
+// Calculating quadrant
 function computeQuad(important, urgent) {
     if (important && urgent) return 1;
     if (important && !urgent) return 2;
     if (!important && urgent) return 3;
     return 4;
 }
-
-//using local storage to load data
-sortTasks();
-tasks.forEach(task => addTaskToDOM(task));
 
 //Create a task
 function createTask(userInput, important, urgent) {
@@ -75,12 +49,16 @@ function createTask(userInput, important, urgent) {
         done: false,
         important: important,
         urgent: urgent,
-        value: computeQuad(important, urgent)
+        quadrant: computeQuad(important, urgent)
     };
 }
 
-
-
+function rebuildDOM() {
+    for (let i = 1; i <= 4; i++) {
+    document.getElementById("q" + i).innerHTML = "";
+}
+tasks.forEach(task => addTaskToDOM(task));
+}
 
 //function to build the DOM (the HTML code) and inserting the data from local storage into it
 //NEED TO UPDATE FUNCTION TO READ ID, TEXT, BULLION FROM TASK TO CREATE DOM
@@ -117,19 +95,12 @@ function addTaskToDOM(task) {
     deleteButton.className = 'delete-task';                                                          // <button class="delete-Button">X</button> (to allow for css to apply style)
     li.appendChild(deleteButton);
 
-    taskList.appendChild(li);                           //add task to the end of the list
+    document.getElementById("q" + task.quadrant).appendChild(li);                                   // adding the li element to the relevant list                           
 
     //Checkbox eventListener
     checkbox.addEventListener('change', () => {         
         task.done = checkbox.checked;
-        li.classList.toggle('completed', task.done);       
-
-        if (task.done) {
-            taskList.appendChild(li);
-        } else {
-            const firstCompleted = taskList.querySelector('li.completed'); 
-            taskList.insertBefore(li, firstCompleted || null);
-        }
+        li.classList.toggle('completed', task.done);
 
         localStorage.setItem('tasks', JSON.stringify(tasks));           //save change to localStorage after each change
     })
@@ -140,7 +111,6 @@ function addTaskToDOM(task) {
         setTimeout(() => li.remove(), 200);                                                         //removes the li from the DOM after 200 milliseconds to allow for the css animation to complete
                                                                                         
         tasks = tasks.filter(t => t.id !== task.id);                                                //remove the task from the array using id
-        sortTasks();
         localStorage.setItem("tasks", JSON.stringify(tasks));                                       //update local storage with new array
         
     });
@@ -152,21 +122,17 @@ document.getElementById("addButton").addEventListener("click", function() {     
     let task = document.getElementById("taskInput").value;                                          //this is the function. It is assigning the variable task with the user input.
     if (task === "") return;                                                                        //To prevent blank tasks from being added. 
 
-    let importance = document.getElementById("important").value;
-    //if nothing selected then the dropbox should flash red
-    let urgency = document.getElementById("urgent").value;
-    //if nothing selected then the dropbox should flash red
+    let importance = document.getElementById("important").value === "true";                         // Converting string to boolean 
+    let urgency = document.getElementById("urgent").value === "true";                               // Converting string to boolean 
     
-    task = createTask(task, importance, urgency);
+    
+    task = createTask(task, importance, urgency);                                                   // creating the task object
     tasks.push(task);                                                                               //pushing the user data to the tasks array for local storage
-    sortTasks();
     localStorage.setItem("tasks", JSON.stringify(tasks));                                           //saves the task array to local storage as each item is added.
 
-    //Build DOM for new task using new function
-    taskList.innerHTML = "";                                                                        //we are clearing the exsisting DOM
-    tasks.forEach(addTaskToDOM);                                                                  //rebuilding the DOM using the updated tasks array
+    rebuildDOM();
 
-    //what if the button get clicked again? The taskInput is still displaying the variable assigned above which means the user will have to erase it manually, yuck! Reset the variable to display the placeholder text we created in the html file.
+    //Clear user input data and display placeholder text
     document.getElementById("taskInput").value = "";
 });
 
