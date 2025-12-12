@@ -61,7 +61,6 @@ tasks.forEach(task => addTaskToDOM(task));
 }
 
 //function to build the DOM (the HTML code) and inserting the data from local storage into it
-//NEED TO UPDATE FUNCTION TO READ ID, TEXT, BULLION FROM TASK TO CREATE DOM
 function addTaskToDOM(task) {
     
     const li = document.createElement('li');
