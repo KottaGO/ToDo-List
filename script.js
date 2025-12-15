@@ -132,4 +132,37 @@ document.getElementById("taskInput").addEventListener("keydown", function(event)
     }
 });
 
+//clear all button logic
+const modal = document.getElementById("confirm-modal");
+const yesBtn = document.getElementById("confirm-yes");
+const noBtn = document.getElementById("confirm-no");
+const clearAllBtn = document.getElementById("clear-all");
+
+clearAllBtn.addEventListener("click", function() {
+     //make the modal appear in DOM
+    modal.classList.add("modal-visible");
+});
+
+ //allow user to exit using esc key to exit clearAllBtn popup
+document.addEventListener("keydown", function(event) {
+    if (event.key !== "Escape") return;
+    if (!modal.classList.contains("modal-visible")) return;
+       
+    modal.classList.remove("modal-visible");
+});
+
+//event listeners for no button --> return
+noBtn.addEventListener("click", function() {
+    modal.classList.remove("modal-visible");
+});
+
+//event listener for yes button --> delete logic
+yesBtn.addEventListener("click", function() {
+    tasks = [];
+    localStorage.removeItem("tasks");
+    rebuildDOM();
+    modal.classList.remove("modal-visible");
+    document.getElementById("taskInput").focus();
+});
+
 
