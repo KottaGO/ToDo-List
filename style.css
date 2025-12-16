@@ -429,3 +429,21 @@ body {
     cursor: pointer;
 }
 
+/* Drag and drop */
+/* Task being dragged */
+.task-dragging {
+    opacity: 0.6;
+    transform: scale(1.02);
+    box-shadow: 0 12px 30px rgba(16, 86, 53, 0.25);
+    cursor: grabbing;
+}
+
+/* Quadrant being hovered during drag */
+.quadrant.drag-over {
+    background: rgba(46, 139, 87, 0.06);
+    outline: 2px dashed rgba(46, 139, 87, 0.3);
+    outline-offset: -6px;
+}
+
+
+

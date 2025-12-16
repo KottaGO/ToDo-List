@@ -6,6 +6,9 @@
 //Load raw data from localStorage (may be null)
 let raw = JSON.parse(localStorage.getItem("tasks"));
 
+//Drag and drop logic
+let draggedTaskId = null;
+
 //Need to relearn how this code works
 let tasks = Array.isArray(raw) ? raw.map(item => {
     if (typeof item === 'string') {                                                                     //this handles legacy data that may still be using only strings
@@ -60,10 +63,61 @@ function rebuildDOM() {
 tasks.forEach(task => addTaskToDOM(task));
 }
 
+// Assigning event listeners for each quadrant
+for (let i = 1; i <= 4; i++) {
+    const quadrant = document.getElementById("quad-q" + i);
+
+    quadrant.addEventListener("dragover", function (event) {
+        event.preventDefault(); // required
+        quadrant.classList.add("drag-over");
+    });
+
+    quadrant.addEventListener("dragleave", () => {
+        quadrant.classList.remove("drag-over");
+    });
+
+    quadrant.addEventListener("drop", function (event) {
+        event.preventDefault(); //required
+        quadrant.classList.remove("drag-over");
+
+        // 1. find the task
+        const task = tasks.find(t => t.id === draggedTaskId);
+        if (!task) return;
+
+        // 2. update task.quadrant = i
+        task.quadrant = i;
+
+        // 3. save
+        localStorage.setItem("tasks", JSON.stringify(tasks));
+
+        // 4. rebuild DOM and reset draggedTaskId
+        rebuildDOM();
+        draggedTaskId = null;
+    });
+}
+
+//End testing
+
 //function to build the DOM (the HTML code) and inserting the data from local storage into it
 function addTaskToDOM(task) {
     
     const li = document.createElement('li');
+    li.draggable = true; //!task.done;                  //if task is completed, no drag
+    li.addEventListener("dragstart", function (event) {      //This records the task id
+        if (task.done) {
+            event.preventDefault();
+            return;
+        }
+        draggedTaskId = task.id;
+        li.classList.add("task-dragging");
+        //console.log("Drag started:", draggedTaskId);
+    });
+
+    li.addEventListener("dragend", function () {
+        li.classList.remove("task-dragging");
+    });
+
+
     li.setAttribute('data-id', task.id);                //Store unique id for reference
     li.classList.toggle('completed', task.done);        //Add 'completed' class if task is done
     
@@ -143,7 +197,7 @@ clearAllBtn.addEventListener("click", function() {
     modal.classList.add("modal-visible");
 });
 
- //allow user to exit using esc key to exit clearAllBtn popup
+ //ESC key close modal
 document.addEventListener("keydown", function(event) {
     if (event.key !== "Escape") return;
     if (!modal.classList.contains("modal-visible")) return;
@@ -151,12 +205,19 @@ document.addEventListener("keydown", function(event) {
     modal.classList.remove("modal-visible");
 });
 
+//Click outside modal closes it
+modal.addEventListener("click", function(event) {
+    if (event.target === modal) {
+        modal.classList.remove("modal-visible");
+    }
+});
+
 //event listeners for no button --> return
 noBtn.addEventListener("click", function() {
     modal.classList.remove("modal-visible");
 });
 
-//event listener for yes button --> delete logic
+//event listener for yes button --> delete storage, DOM
 yesBtn.addEventListener("click", function() {
     tasks = [];
     localStorage.removeItem("tasks");
