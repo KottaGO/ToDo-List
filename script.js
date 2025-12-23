@@ -3,9 +3,91 @@
 //=== means equal.
 //What does parseInt do?
 
+//~~~~~~~~~~~   GLOBAL VARIABLES   ~~~~~~~~~~~//
+let saveStatus = "saved";
+
+//~~~~~~~~~~~   TASKS API (localStorage-backed)   ~~~~~~~~~~~//
+function apiGetTasks() {
+    return Promise.resolve().then(() => {
+        const raw = JSON.parse(localStorage.getItem("tasks"));
+        return Array.isArray(raw) ? raw : [];
+    });
+}
+
+function apiSaveAllTasks(tasksArray) {
+    return new Promise((resolve, reject) => {
+        setTimeout(() => {
+            const shouldFail = Math.random() < 0.3;
+
+            if (shouldFail) {
+                reject({ ok: false, error: "Server error" });
+                return;
+            }
+
+            localStorage.setItem("tasks", JSON.stringify(tasksArray));
+            resolve({ ok: true });
+        }, 1000);
+    });
+}
+
+
+//~~~~~~~~~~~   SAVE LOGIC   ~~~~~~~~~~~//
+function setSaveStatus(statusKey) {
+    // Update the internal state
+    saveStatus = "statusKey";
+    // Update the UI to reflect that state
+    return saveStatus;
+}
 
 //~~~~~~~~~~~   TASK LOGIC   ~~~~~~~~~~~//
 
+// Tasks start empty
+let tasks = [];
+
+function normaliseLoadedTasks(rawArray) {
+    return Array.isArray(rawArray) ? rawArray.map(item => {
+        if (typeof item === 'string') {
+            return {
+                id: Date.now() + Math.floor(Math.random() * 1000),
+                text: item,
+                done: false,
+                important: false,
+                urgent: false,
+                quadrant: 4
+            };
+        } else {
+            return {
+                id: item.id || (Date.now() + Math.floor(Math.random() * 1000)),
+                text: item.text,
+                done: item.done,
+                important: item.important,
+                urgent: item.urgent,
+                quadrant: computeQuad(item.important, item.urgent)
+            };
+        }
+    }) : [];
+}
+
+function bootApp() {
+    console.log("bootApp running");
+    console.log("q1 exists?", document.getElementById("q1"));
+
+    apiGetTasks()
+        .then(rawArray => {
+            tasks = normaliseLoadedTasks(rawArray);
+            rebuildDOM();
+        })
+        .catch(() => {
+            tasks = [];
+            rebuildDOM();
+        });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    bootApp();
+});
+
+/*
 //Load raw data from localStorage (may be null)
 let raw = JSON.parse(localStorage.getItem("tasks"));
 
@@ -35,6 +117,8 @@ let tasks = Array.isArray(raw) ? raw.map(item => {
 
 //Clear old data and load from local storage
 rebuildDOM();
+
+*/
 
 // Calculating quadrant
 function computeQuad(important, urgent) {
@@ -69,6 +153,8 @@ function createTask(userInput, important, urgent) {
 
 // Rebuilding display
 function rebuildDOM() {
+    console.log("rebuildDOM called, tasks length:", tasks.length);
+    
     for (let i = 1; i <= 4; i++) {
     document.getElementById("q" + i).innerHTML = "";
 }
@@ -123,19 +209,21 @@ function addTaskToDOM(task) {
         task.done = checkbox.checked;
         li.classList.toggle('completed', task.done);
 
-        localStorage.setItem('tasks', JSON.stringify(tasks));           //save change to localStorage after each change
-    })
+        apiSaveAllTasks(tasks)           //save change to localStorage after each change
+            .catch(err => {
+                console.error("Save failed:", err);
+            });
+    });
 
-    // It removes the li from the DOM and removes the li from local storage
+    // It removes the li from tshe DOM and removes the li from local storage
     deleteButton.addEventListener("click", function () {                                            
         li.classList.add("task-exit");
         setTimeout(() => li.remove(), 200);                                                         //removes the li from the DOM after 200 milliseconds to allow for the css animation to complete
                                                                                         
         tasks = tasks.filter(t => t.id !== task.id);                                                //remove the task from the array using id
-        localStorage.setItem("tasks", JSON.stringify(tasks));                                       //update local storage with new array
+        apiSaveAllTasks(tasks);                                       //update local storage with new array
         
     });
-
 }
 
 // Allowing the button to add tasks when clicked
@@ -149,8 +237,7 @@ document.getElementById("addButton").addEventListener("click", function() {     
     
     task = createTask(task, importance, urgency);                                                   // creating the task object
     tasks.push(task);                                                                               //pushing the user data to the tasks array for local storage
-    localStorage.setItem("tasks", JSON.stringify(tasks));                                           //saves the task array to local storage as each item is added.
-
+    apiSaveAllTasks(tasks);                                                                         //saves the task array to local storage as each item is added.
     rebuildDOM();
 
     // Clear user input data and display placeholder text
