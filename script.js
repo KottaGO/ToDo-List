@@ -5,6 +5,9 @@
 
 //~~~~~~~~~~~   GLOBAL VARIABLES   ~~~~~~~~~~~//
 let saveStatus = "saved";
+let isSaving = false;
+let savePending = false;
+
 
 //~~~~~~~~~~~   TASKS API (localStorage-backed)   ~~~~~~~~~~~//
 function apiGetTasks() {
@@ -14,6 +17,55 @@ function apiGetTasks() {
     });
 }
 
+// Task creation
+function apiCreateTask(text, important, urgent) {
+    return new Promise((resolve, reject) => {
+
+        // Validate inputs
+        if (typeof text !== "string" || text.trim() === "") {       //text.trim removes leading and trailing whitespaces within a string
+            reject({ error: "Task text is required" });
+            return;
+        }
+        
+        if (typeof important !== "boolean") {       // typeof returns a string
+            reject({ error: "Invalid important selection" });
+            return;
+        }
+
+        if (typeof urgent !== "boolean") {
+            reject({ error: "Invalid urgent selection" });
+            return;
+        }
+
+        //create task object
+        const task = {
+            id : createId(),
+            text : text,
+            done : false,           // default 
+            important : important,
+            urgent : urgent,
+            quadrant : calcQuadrant(important, urgent)
+        }
+
+        resolve(task);                              // no return needed after resolve
+    });
+}
+
+//~~~~~~~~~~~   TASK CREATION LOGIC   ~~~~~~~~~~~//
+
+
+function createId() {
+    return Date.now() + Math.floor(Math.random() * 1000);
+}
+
+function calcQuadrant(important, urgent) {
+    if (important && urgent) return 1;
+    if (important && !urgent) return 2;
+    if (!important && urgent) return 3;
+    return 4;
+}
+
+// Saving tasks
 function apiSaveAllTasks(tasksArray) {
     return new Promise((resolve, reject) => {
         setTimeout(() => {
@@ -33,11 +85,63 @@ function apiSaveAllTasks(tasksArray) {
 
 //~~~~~~~~~~~   SAVE LOGIC   ~~~~~~~~~~~//
 function setSaveStatus(statusKey) {
-    // Update the internal state
-    saveStatus = "statusKey";
-    // Update the UI to reflect that state
-    return saveStatus;
+    const STATUS_TEXT = {
+        saving: "Saving...",
+        saved: "Saved",
+        error: "Error"
+    };
+
+    if (statusKey in STATUS_TEXT) {
+        saveStatus = statusKey;
+    } else {
+        console.log("Unknown error code: ", statusKey);
+        return;
+    }
+
+    document.getElementById("save-status").textContent = STATUS_TEXT[saveStatus];
+   
 }
+
+
+function requestSaveTasks(tasks) {
+    let attempts = 1;
+    const MAX_ATTEMPTS = 3;
+    
+
+    if (isSaving) {
+        savePending = true;
+        return;
+    }
+
+    setSaveStatus("saving");
+
+    function attemptSave() {
+        isSaving = true;
+        apiSaveAllTasks(tasks)
+            .then(data => {
+                setSaveStatus("saved");
+                isSaving = false;
+                if (savePending) {
+                    attemptSave();
+                    savePending = false;
+                }
+                attempts = 1;
+            })
+            .catch(err => {
+                attempts += 1;
+                if (attempts <= MAX_ATTEMPTS) {
+                    setTimeout(attemptSave, 1000);
+                } else {
+                    setSaveStatus("error");
+                    isSaving = false;
+                    savePending = false;
+                }
+            });
+    }
+
+    attemptSave();
+}
+
 
 //~~~~~~~~~~~   TASK LOGIC   ~~~~~~~~~~~//
 
@@ -139,7 +243,7 @@ function computeFromQuad(quadrant) {
     }
 }
 
-// Create a task
+/* Create a task
 function createTask(userInput, important, urgent) {
     return {
         id: Date.now() + Math.floor(Math.random() * 1000),
@@ -150,6 +254,7 @@ function createTask(userInput, important, urgent) {
         quadrant: computeQuad(important, urgent)
     };
 }
+*/
 
 // Rebuilding display
 function rebuildDOM() {
@@ -209,10 +314,7 @@ function addTaskToDOM(task) {
         task.done = checkbox.checked;
         li.classList.toggle('completed', task.done);
 
-        apiSaveAllTasks(tasks)           //save change to localStorage after each change
-            .catch(err => {
-                console.error("Save failed:", err);
-            });
+        requestSaveTasks(tasks);
     });
 
     // It removes the li from tshe DOM and removes the li from local storage
@@ -221,7 +323,7 @@ function addTaskToDOM(task) {
         setTimeout(() => li.remove(), 200);                                                         //removes the li from the DOM after 200 milliseconds to allow for the css animation to complete
                                                                                         
         tasks = tasks.filter(t => t.id !== task.id);                                                //remove the task from the array using id
-        apiSaveAllTasks(tasks);                                       //update local storage with new array
+        requestSaveTasks(tasks);                                      //update local storage with new array
         
     });
 }
@@ -229,16 +331,21 @@ function addTaskToDOM(task) {
 // Allowing the button to add tasks when clicked
 document.getElementById("addButton").addEventListener("click", function() {                         //in the document (html file) find the element "addButton" and if someone clicks the button run the function.
     let task = document.getElementById("taskInput").value;                                          //this is the function. It is assigning the variable task with the user input.
-    if (task === "") return;                                                                        //To prevent blank tasks from being added. 
+    if (task === "") return;                                                    // can be removed, double checking                                                                        //To prevent blank tasks from being added. 
 
     let importance = document.getElementById("important").value === "true";                         // Converting string to boolean 
     let urgency = document.getElementById("urgent").value === "true";                               // Converting string to boolean 
     
     
-    task = createTask(task, importance, urgency);                                                   // creating the task object
-    tasks.push(task);                                                                               //pushing the user data to the tasks array for local storage
-    apiSaveAllTasks(tasks);                                                                         //saves the task array to local storage as each item is added.
-    rebuildDOM();
+    apiCreateTask(task, importance, urgency)                                                  
+        .then(task => {
+            tasks.push(task);  
+            requestSaveTasks(tasks);
+            rebuildDOM();
+        })
+        .catch(err => {
+            console.log(err);     //CHANGE LATER, show pop up or have indicator
+        })                                                                             
 
     // Clear user input data and display placeholder text
     document.getElementById("taskInput").value = "";
@@ -366,7 +473,7 @@ for (let i = 1; i <= 4; i++) {
 
         tasks.splice(finalIndex, 0, task);
         // 3. save
-        localStorage.setItem("tasks", JSON.stringify(tasks));
+        requestSaveTasks(tasks);
 
         // 4. rebuild DOM and reset draggedTaskId
         rebuildDOM();
