@@ -9,7 +9,7 @@ let isSaving = false;
 let savePending = false;
 
 
-//~~~~~~~~~~~   TASKS API (localStorage-backed)   ~~~~~~~~~~~//
+//~~~~~~~~~~~   TASKS API   ~~~~~~~~~~~//
 function apiGetTasks() {
     return Promise.resolve().then(() => {
         const raw = JSON.parse(localStorage.getItem("tasks"));
@@ -51,20 +51,6 @@ function apiCreateTask(text, important, urgent) {
     });
 }
 
-//~~~~~~~~~~~   TASK CREATION LOGIC   ~~~~~~~~~~~//
-
-
-function createId() {
-    return Date.now() + Math.floor(Math.random() * 1000);
-}
-
-function calcQuadrant(important, urgent) {
-    if (important && urgent) return 1;
-    if (important && !urgent) return 2;
-    if (!important && urgent) return 3;
-    return 4;
-}
-
 // Saving tasks
 function apiSaveAllTasks(tasksArray) {
     return new Promise((resolve, reject) => {
@@ -81,6 +67,106 @@ function apiSaveAllTasks(tasksArray) {
         }, 1000);
     });
 }
+
+// Updating tasks
+function apiUpdateTask(id, changes) {
+    return new Promise((resolve, reject) => {
+        const ALLOWED_KEYS = ["text", "done", "important", "urgent"];       // define possible keys
+        let changingKeys;
+    
+        // find task by id
+        let task = getTaskById(id);                 // returns null if no task found
+        if (task === null) {
+            reject({ ok: false, error: "Error: Task not found"});
+            return;
+        }
+
+        // validate changes
+        changingKeys = Object.keys(changes); 
+
+        // Check if changes are empty
+        if (changingKeys.length === 0) {
+            reject({ ok: false, error: "Error: No changes provided"})
+        }
+
+        // Check changes is an object, null and is an array
+        if (
+            typeof changes !== "object" || 
+            changes === null ||
+            Array.isArray(changes)
+        ) {
+            reject({ ok: false, error: "Error: Invalid changes object" });
+            return;
+        }
+        
+                       // will break if null or changes isn't an object
+        for (let i = 0; i < changingKeys.length; i++) {
+            const key = changingKeys[i];
+
+            if (!ALLOWED_KEYS.includes(key)) {
+                reject({ ok: false, error: "Error: Invalid task change: " + key });
+                return;
+            }
+        }
+
+        // REVIEW THIS CODE
+        if (task.done === true) {
+            const onlyChangingDone =                // Notice: rules are saved as an object
+                changingKeys.length === 1 &&
+                changingKeys[0] === "done" &&
+                changes.done === false;
+
+            if (!onlyChangingDone) {
+                reject({ ok: false, error:"Error: Completed tasks must be uncompleted before editing"});
+                return;
+            }
+        }
+
+        // mutate the task
+        changingKeys.forEach(key => {
+            task[key] = changes[key];
+        });
+
+        // recalculate quadrant if needed
+        if (changingKeys.includes("important") || changingKeys.includes("urgent")) {
+            task.quadrant = calcQuadrant(task.important, task.urgent);
+        }
+
+        // resolve with updated task
+        resolve({ ok: true, result: task});
+        })
+    
+}
+
+//~~~~~~~~~~~   UPDATE TASK LOGIC   ~~~~~~~~~~~//
+
+function getTaskById(id) {
+    /*
+    for (let i = 0; i < tasks.length; i++) {
+        if (tasks[i].id === id ) {
+            return tasks[i]
+        }
+    }
+    */
+
+    return tasks.find(task => task.id === id) || null;
+}
+
+//~~~~~~~~~~~   TASK CREATION LOGIC   ~~~~~~~~~~~//
+
+
+function createId() {
+    return Date.now() + Math.floor(Math.random() * 1000);
+}
+
+function calcQuadrant(important, urgent) {
+    if (important && urgent) return 1;
+    if (important && !urgent) return 2;
+    if (!important && urgent) return 3;
+    return 4;
+}
+
+
 
 
 //~~~~~~~~~~~   SAVE LOGIC   ~~~~~~~~~~~//
@@ -311,7 +397,8 @@ function addTaskToDOM(task) {
 
     // Checkbox eventListener
     checkbox.addEventListener('change', () => {         
-        task.done = checkbox.checked;
+        apiUpdateTask(task.id, { done: checkbox.checked });
+        //task.done = checkbox.checked;
         li.classList.toggle('completed', task.done);
 
         requestSaveTasks(tasks);
@@ -451,6 +538,7 @@ for (let i = 1; i <= 4; i++) {
     
         //2.5 recalculate important and urgent attributes
         const updateTask = computeFromQuad(i);
+        
         task.important = updateTask.important;
         task.urgent = updateTask.urgent;
 
