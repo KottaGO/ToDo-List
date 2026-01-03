@@ -73,7 +73,17 @@ function apiUpdateTask(id, changes) {
     return new Promise((resolve, reject) => {
         const ALLOWED_KEYS = ["text", "done", "important", "urgent"];       // define possible keys
         let changingKeys;
-    
+
+        // Check changes is an object, null and is an array
+        if (
+            typeof changes !== "object" || 
+            changes === null ||
+            Array.isArray(changes)
+        ) {
+            reject({ ok: false, error: "Error: Invalid changes object" });
+            return;
+        }
+
         // find task by id
         let task = getTaskById(id);                 // returns null if no task found
         if (task === null) {
@@ -87,19 +97,10 @@ function apiUpdateTask(id, changes) {
         // Check if changes are empty
         if (changingKeys.length === 0) {
             reject({ ok: false, error: "Error: No changes provided"})
-        }
-
-        // Check changes is an object, null and is an array
-        if (
-            typeof changes !== "object" || 
-            changes === null ||
-            Array.isArray(changes)
-        ) {
-            reject({ ok: false, error: "Error: Invalid changes object" });
             return;
         }
-        
-                       // will break if null or changes isn't an object
+
+        // will break if null or changes isn't an object
         for (let i = 0; i < changingKeys.length; i++) {
             const key = changingKeys[i];
 
@@ -397,11 +398,15 @@ function addTaskToDOM(task) {
 
     // Checkbox eventListener
     checkbox.addEventListener('change', () => {         
-        apiUpdateTask(task.id, { done: checkbox.checked });
-        //task.done = checkbox.checked;
-        li.classList.toggle('completed', task.done);
-
-        requestSaveTasks(tasks);
+        apiUpdateTask(task.id, { done: checkbox.checked })
+            .then(() => {
+                li.classList.toggle('completed', task.done);
+                requestSaveTasks(tasks);
+            })
+            .catch(err => {
+                console.log(err.error);
+                checkbox.checked = task.done;
+            }); 
     });
 
     // It removes the li from tshe DOM and removes the li from local storage
